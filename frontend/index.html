@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đại Dương Automation</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css?v=1.1.7">
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+<body>
+    <!-- Nút Floating Chat Widget -->
+    <button class="chat-widget-fab" id="chat-widget-fab">
+        <img src="wood_water_robot.png" alt="Chat" class="fab-icon-chat" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
+        <i class="fa-solid fa-xmark fab-icon-close" style="display: none;"></i>
+    </button>
+
+    <!-- Khung chat chính (Widget Window) -->
+    <div class="chat-widget-window" id="chat-widget-window">
+        <!-- Hiệu ứng bong bóng nước -->
+        <div class="bubbles-container">
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+        </div>
+        <main class="chat-area">
+            <header class="chat-header">
+                <div class="header-info">
+                    <h2>Trợ lý Tư vấn</h2>
+                    <p>Đại Dương Automation</p>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" title="Xóa lịch sử chat" id="clear-chat-top-btn">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                    <button class="icon-btn" title="Thu nhỏ" id="minimize-widget-btn">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Khung chứa tin nhắn -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- Tin nhắn chào mừng mặc định -->
+                <div class="message system-msg">
+                    <div class="msg-avatar" style="background: none; border: none; padding: 0;">
+                        <img src="wood_water_robot.png" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    </div>
+                    <div class="msg-bubble">
+                        <p>Xin chào! Tôi là chatbot tư vấn sản phẩm của công ty Đại Dương Automation</p>
+                        <p>Tôi có thể tra cứu nhanh thông số kỹ thuật, giá bán và hình ảnh của hơn 5,000 thiết bị. Bạn cần tôi tìm kiếm hoặc tư vấn thiết bị nào hôm nay?</p>
+                        <div class="welcome-suggestions">
+                            <button class="welcome-suggest-btn"
+                                data-query="Tìm cảm biến áp suất SMC">Cảm biến áp suất SMC</button>
+                            <button class="welcome-suggest-btn"
+                                data-query="Thông tin chi tiết E5CC-QX3ASM-001">Thông tin chi tiết E5CC-QX3ASM-001</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khung nhập dữ liệu -->
+            <footer class="chat-input-area">
+                <form id="chat-form" class="chat-form">
+                    <input type="text" id="user-input"
+                        placeholder="Nhập câu hỏi tại đây..." autocomplete="off"
+                        required>
+                    <button type="submit" class="send-btn" id="send-btn">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Modal Popup xem chi tiết thông số sản phẩm -->
+    <div class="modal-overlay" id="product-modal">
+        <!-- Hiệu ứng lá rơi và giọt nước -->
+        <div class="leaves-container">
+            <div class="leaf">🍃</div>
+            <div class="leaf">💧</div>
+            <div class="leaf">🌿</div>
+            <div class="leaf">💦</div>
+            <div class="leaf">🌱</div>
+            <div class="leaf">💧</div>
+            <div class="leaf">🌊</div>
+            <div class="leaf">🌿</div>
+        </div>
+
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-product-title">Tên thiết bị</h3>
+                <button class="close-modal-btn" id="close-modal-btn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-product-layout">
+                    <div class="modal-product-image-container">
+                        <img id="modal-product-img" src="" alt="Hình ảnh sản phẩm">
+                    </div>
+                    <div class="modal-product-info">
+                        <div class="info-group">
+                            <span class="info-label">Hãng sản xuất</span>
+                            <span class="info-value" id="modal-product-company">TOHO Electronics</span>
+                        </div>
+                        <div class="info-group">
+                            <span class="info-label">Giá niêm yết</span>
+                            <span class="info-value price-highlight" id="modal-product-price">1,200,000 VNĐ</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-product-description">
+                    <h4>Mô tả kỹ thuật chi tiết:</h4>
+                    <div class="description-content" id="modal-product-desc">
+                        Nội dung chi tiết...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script JS -->
+    <script src="app.js?v=1.1.10"></script>
+</body>
+
+</html>

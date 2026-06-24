@@ -1,0 +1,28 @@
+# Môi trường và API keys (TUYỆT ĐỐI KHÔNG COMMIT)
+.env
+backend/.env
+
+# Thư mục Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Môi trường ảo (Virtual Environment)
+.venv/
+venv/
+ENV/
+env/
+
+# Dữ liệu Vector Store (Sẽ tự sinh ra khi chạy file ingest.py)
+backend/vector_store/
+
+# File tạm của hệ điều hành và Excel
+~$*
+.DS_Store
+Thumbs.db
+
+# Cấu hình của các Editor/IDE (VS Code, PyCharm,...)
+.vscode/
+.idea/
+
+data.xlsx
