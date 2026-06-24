@@ -47,6 +47,7 @@ GEMINI_API_KEYS=KEY_1,KEY_2,KEY_3
 ```
 
 ### 3. Tạo vector store
+Download dataset : "https://drive.google.com/drive/folders/1iiTd0LejstHElslXODa-8Y0S0oMBul7M?usp=sharing"
 
 Script sẽ đọc `data.xlsx` ở thư mục gốc project và ghi dữ liệu vào `backend/vector_store/`.
 
