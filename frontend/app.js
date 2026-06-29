@@ -34,8 +34,7 @@ function setupEventListeners() {
   // Đóng/Mở khung chat
   chatWidgetFab.addEventListener("click", () => {
     chatWidgetWindow.classList.add("active");
-    chatWidgetFab.querySelector(".fab-icon-chat").style.display = "none";
-    chatWidgetFab.querySelector(".fab-icon-close").style.display = "block";
+    chatWidgetFab.style.display = "none";
     userInput.focus();
   });
 
@@ -69,15 +68,13 @@ function setupEventListeners() {
 
   minimizeWidgetBtn.addEventListener("click", () => {
     chatWidgetWindow.classList.remove("active");
-    chatWidgetFab.querySelector(".fab-icon-chat").style.display = "block";
-    chatWidgetFab.querySelector(".fab-icon-close").style.display = "none";
+    chatWidgetFab.style.display = "flex";
   });
 
   chatWidgetFab.querySelector(".fab-icon-close").addEventListener("click", (e) => {
     e.stopPropagation();
     chatWidgetWindow.classList.remove("active");
-    chatWidgetFab.querySelector(".fab-icon-chat").style.display = "block";
-    chatWidgetFab.querySelector(".fab-icon-close").style.display = "none";
+    chatWidgetFab.style.display = "flex";
   });
 
   // Xử lý form gửi tin nhắn
