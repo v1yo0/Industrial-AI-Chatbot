@@ -19,7 +19,8 @@
 <body>
     <!-- Nút Floating Chat Widget -->
     <button class="chat-widget-fab" id="chat-widget-fab">
-        <img src="wood_water_robot.png" alt="Chat" class="fab-icon-chat" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
+        <img src="wood_water_robot.png" alt="Chat" class="fab-icon-chat"
+            style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
         <i class="fa-solid fa-xmark fab-icon-close" style="display: none;"></i>
     </button>
 
@@ -27,13 +28,17 @@
     <div class="chat-widget-window" id="chat-widget-window">
         <!-- Hiệu ứng bong bóng nước -->
         <div class="bubbles-container">
-            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
-            <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
         </div>
         <main class="chat-area">
             <header class="chat-header">
                 <div class="header-info">
-                    <h2>Trợ lý Tư vấn</h2>
+                    <h2>Trợ lý tư vấn</h2>
                     <p>Đại Dương Automation</p>
                 </div>
                 <div class="header-actions">
@@ -51,16 +56,18 @@
                 <!-- Tin nhắn chào mừng mặc định -->
                 <div class="message system-msg">
                     <div class="msg-avatar" style="background: none; border: none; padding: 0;">
-                        <img src="wood_water_robot.png" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                        <img src="wood_water_robot.png"
+                            style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                     </div>
                     <div class="msg-bubble">
                         <p>Xin chào! Tôi là chatbot tư vấn sản phẩm của công ty Đại Dương Automation</p>
-                        <p>Tôi có thể tra cứu nhanh thông số kỹ thuật, giá bán và hình ảnh của hơn 5,000 thiết bị. Bạn cần tôi tìm kiếm hoặc tư vấn thiết bị nào hôm nay?</p>
+                        <p>Tôi có thể tra cứu nhanh thông số kỹ thuật, giá bán và hình ảnh của hơn 5,000 thiết bị. Bạn
+                            cần tôi tìm kiếm hoặc tư vấn thiết bị nào hôm nay?</p>
                         <div class="welcome-suggestions">
-                            <button class="welcome-suggest-btn"
-                                data-query="Tìm cảm biến áp suất SMC">Cảm biến áp suất SMC</button>
-                            <button class="welcome-suggest-btn"
-                                data-query="Thông tin chi tiết E5CC-QX3ASM-001">Thông tin chi tiết E5CC-QX3ASM-001</button>
+                            <button class="welcome-suggest-btn" data-query="Tìm cảm biến áp suất SMC">Cảm biến áp suất
+                                SMC</button>
+                            <button class="welcome-suggest-btn" data-query="Thông tin chi tiết E5CC-QX3ASM-001">Thông
+                                tin chi tiết E5CC-QX3ASM-001</button>
                         </div>
                     </div>
                 </div>
@@ -69,8 +76,7 @@
             <!-- Khung nhập dữ liệu -->
             <footer class="chat-input-area">
                 <form id="chat-form" class="chat-form">
-                    <input type="text" id="user-input"
-                        placeholder="Nhập câu hỏi tại đây..." autocomplete="off"
+                    <input type="text" id="user-input" placeholder="Nhập câu hỏi tại đây..." autocomplete="off"
                         required>
                     <button type="submit" class="send-btn" id="send-btn">
                         <i class="fa-solid fa-paper-plane"></i>
