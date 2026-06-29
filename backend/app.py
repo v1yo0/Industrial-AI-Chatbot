@@ -883,7 +883,7 @@ def single_chunk_stream(response_text: str, sources: list = None):
     def event_generator():
         yield json.dumps({"type": "chunk", "content": response_text}) + "\n"
         yield json.dumps({"type": "sources", "sources": sources or []}) + "\n"
-    return StreamingResponse(event_generator(), media_type="application/x-ndjson")
+    return StreamingResponse(event_generator(), media_type="application/x-ndjson", headers={"Cache-Control": "no-cache, no-transform", "Connection": "keep-alive", "X-Accel-Buffering": "no"})
 
 # ============================================================
 # QUẢN LÝ LỊCH SỬ CHAT
@@ -1344,7 +1344,7 @@ async def chat_endpoint(request: ChatRequest):
                 
                 yield json.dumps({"type": "sources", "sources": []}) + "\n"
                 
-            return StreamingResponse(chitchat_generator(), media_type="application/x-ndjson")
+            return StreamingResponse(chitchat_generator(), media_type="application/x-ndjson", headers={"Cache-Control": "no-cache, no-transform", "Connection": "keep-alive", "X-Accel-Buffering": "no"})
 
         # BƯỚC 3: Quét hãng có sẵn theo loại thiết bị (phục vụ clarification)
         available_brands = []
@@ -1398,7 +1398,7 @@ async def chat_endpoint(request: ChatRequest):
                 
                 yield json.dumps({"type": "sources", "sources": []}) + "\n"
                 
-            return StreamingResponse(general_advice_generator(), media_type="application/x-ndjson")
+            return StreamingResponse(general_advice_generator(), media_type="application/x-ndjson", headers={"Cache-Control": "no-cache, no-transform", "Connection": "keep-alive", "X-Accel-Buffering": "no"})
 
         # BƯỚC 3.5: LLM Query Expansion (chỉ chạy khi không có model cụ thể)
         if not model_filter and not action == "chitchat":
@@ -1586,7 +1586,7 @@ async def chat_endpoint(request: ChatRequest):
                 yield json.dumps({"type": "error", "content": f"Gặp lỗi khi gọi Gemini API: {str(e)}"}) + "\n"
                 yield json.dumps({"type": "sources", "sources": return_sources}) + "\n"
 
-        return StreamingResponse(event_generator(), media_type="application/x-ndjson")
+        return StreamingResponse(event_generator(), media_type="application/x-ndjson", headers={"Cache-Control": "no-cache, no-transform", "Connection": "keep-alive", "X-Accel-Buffering": "no"})
             
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
