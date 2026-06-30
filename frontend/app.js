@@ -213,8 +213,7 @@ async function handleUserMessageSend() {
             } else if (data.type === 'chunk') {
               fullResponse += data.content;
               updateBotMessageStreaming(botMessageId, fullResponse);
-              // Nhường luồng cho trình duyệt vẽ giao diện để tránh bị gom cục (batching)
-              await new Promise(resolve => setTimeout(resolve, 10));
+              // Cập nhật giao diện (không dùng setTimeout để tránh bị throttle khi chuyển tab)
             } else if (data.type === 'error') {
               fullResponse += "\n\n⚠️ " + data.content;
               updateBotMessageStreaming(botMessageId, fullResponse);
