@@ -96,6 +96,15 @@ function setupEventListeners() {
       productModal.classList.remove("active");
     }
   });
+
+  // Tái tạo vị trí rơi ngẫu nhiên cho mỗi icon sau khi nó rơi hết 1 vòng
+  document.querySelectorAll(".leaf").forEach(leaf => {
+    leaf.addEventListener("animationiteration", (e) => {
+      if (e.animationName === "fall") {
+        leaf.style.left = Math.random() * 95 + "%";
+      }
+    });
+  });
 }
 
 // Setup suggestions in default welcome chat bubble
