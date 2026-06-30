@@ -47,21 +47,21 @@ function setupEventListeners() {
 
     const trail = document.createElement("div");
     trail.className = "mouse-trail";
-    
+
     // Tọa độ chuột trong khung chat
     const rect = chatWidgetWindow.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     trail.style.left = `${x}px`;
     trail.style.top = `${y}px`;
-    
+
     // Icon ngẫu nhiên
-    const icons = ["💧", "✨", "🫧", "🍃", "🌿"];
+    const icons = ["💧", "✨", "🫧", "🍃", "🌿", "🌳", "🍁", "🪵", "🌊", "☁️", "⚡️", "🌾", "❄️", "🏝️", "⛈️", "🌧️", "🌥️"];
     trail.textContent = icons[Math.floor(Math.random() * icons.length)];
-    
+
     chatWidgetWindow.appendChild(trail);
-    
+
     // Xóa đi sau khi kết thúc animation (1s)
     setTimeout(() => trail.remove(), 1000);
   });
@@ -140,12 +140,12 @@ function resetChat() {
 function showSystemInfo() {
   alert(
     "Trợ lý Ảo Đại Dương Automation - Version 1.0 (RAG)\n\n" +
-      "- Backend: Python FastAPI\n" +
-      "- Search Engine: Hybrid Search (Vector + BM25 + RRF + Cross-Encoder Reranker)\n" +
-      "- Embeddings: intfloat/multilingual-e5-small (384 dimensions)\n" +
-      "- Reranker: BAAI/bge-reranker-v2-m3\n" +
-      "- LLM: Gemini 2.5 Flash\n" +
-      "- Database: 5,056 Industrial Equipment products"
+    "- Backend: Python FastAPI\n" +
+    "- Search Engine: Hybrid Search (Vector + BM25 + RRF + Cross-Encoder Reranker)\n" +
+    "- Embeddings: intfloat/multilingual-e5-small (384 dimensions)\n" +
+    "- Reranker: BAAI/bge-reranker-v2-m3\n" +
+    "- LLM: Gemini 2.5 Flash\n" +
+    "- Database: 5,056 Industrial Equipment products"
   );
 }
 
@@ -199,7 +199,7 @@ async function handleUserMessageSend() {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        
+
         // Giữ lại phần tử cuối cùng vì nó có thể là một dòng chưa hoàn chỉnh
         buffer = lines.pop();
 
@@ -219,7 +219,7 @@ async function handleUserMessageSend() {
               fullResponse += "\n\n⚠️ " + data.content;
               updateBotMessageStreaming(botMessageId, fullResponse);
             }
-          } catch(e) {
+          } catch (e) {
             console.error("Parse JSON stream error:", e, line);
           }
         }
@@ -233,7 +233,7 @@ async function handleUserMessageSend() {
             fullResponse += data.content;
             updateBotMessageStreaming(botMessageId, fullResponse);
           }
-        } catch(e) {}
+        } catch (e) { }
       }
 
       finalizeBotMessageStreaming(botMessageId, fullResponse, sources);
@@ -262,29 +262,29 @@ async function handleUserMessageSend() {
 function setLoadingState(isLoading) {
   userInput.disabled = isLoading;
   sendBtn.disabled = isLoading;
-  
+
   if (isLoading) {
     userInput.placeholder = "Đang xử lý...";
     sendBtn.style.opacity = "0.5";
     sendBtn.style.pointerEvents = "none";
-    
+
     // Khóa luôn các nút gợi ý
     document.querySelectorAll(".welcome-suggest-btn").forEach(btn => {
-        btn.disabled = true;
-        btn.style.opacity = "0.5";
-        btn.style.pointerEvents = "none";
+      btn.disabled = true;
+      btn.style.opacity = "0.5";
+      btn.style.pointerEvents = "none";
     });
   } else {
     userInput.placeholder = "Nhập câu hỏi tại đây...";
     sendBtn.style.opacity = "1";
     sendBtn.style.pointerEvents = "auto";
     userInput.focus();
-    
+
     // Mở khóa các nút gợi ý
     document.querySelectorAll(".welcome-suggest-btn").forEach(btn => {
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.style.pointerEvents = "auto";
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.style.pointerEvents = "auto";
     });
   }
 }
@@ -522,20 +522,31 @@ function updateBotMessageStreaming(msgId, content) {
 }
 
 // Preprocess raw description string to add bullet points and line breaks for better readability
-function preprocessDescription(desc) {
-  if (!desc) return "";
+function preprocessDescription(text) {
+  if (!text) return "";
 
-  // 0. Làm phẳng chuỗi, xóa bỏ các dấu xuống dòng vô duyên (ví dụ bị cắt giữa "Nhiệt\nđộ:")
-  let formatted = desc.replace(/[\r\n]+/g, " ");
+  // Làm phẳng chuỗi, xóa bỏ các dấu xuống dòng vô duyên
+  let formatted = text.replace(/[\r\n]+/g, " ");
 
-  // 1. Thay thế các ký tự | bằng dấu xuống dòng và đầu dòng gạch ngang markdown
+  // Thay thế các ký tự | bằng dấu xuống dòng và đầu dòng gạch ngang markdown
   formatted = formatted.replace(/\s*\|\s*/g, "\n- ");
 
-  // Danh sách chữ cái tiếng Việt (không bao gồm số) để làm ranh giới từ
-  const viChars =
-    "a-zA-ZàáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệđìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆĐÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ";
-  const uppercaseViChars =
-    "A-ZÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆĐÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ";
+  // BƯỚC 0.1: Tách các đoạn văn bị dính chùm (ví dụ dính vào spec cuối cùng)
+  // Tách khi có dấu chấm theo sau là chữ hoa
+  formatted = formatted.replace(/\. ([A-ZÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆĐÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ])/g, ".\n\n$1");
+
+  // Tách thủ công các cụm từ kết luận hay gặp nếu chúng không có dấu chấm phía trước
+  const transitionPhrases = [
+    "Trên đây là", "Ứng dụng của", "Ứng dụng máy", "Đặc điểm của", "Một số lưu ý",
+    "Quý đối tác", "Bạn có thể tham khảo", "Ngoài ra,", "Điểm mạnh của",
+    "Với các tính năng", "Cụ thể,", "Nếu bạn đang tìm kiếm", "Đại Dương Automation"
+  ];
+  const transitionRegex = new RegExp(`(?<!\\n)(?<!\\.)\\s*(${transitionPhrases.join("|")})`, "g");
+  formatted = formatted.replace(transitionRegex, ".\n\n$1");
+
+  // Tập hợp các từ khóa viết hoa toàn bộ (đặc trưng của mô tả kĩ thuật)
+  const uppercaseViChars = "A-ZÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆĐÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ";
+  const viChars = uppercaseViChars + "a-zàáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệđìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ";
 
   // Danh sách từ khóa viết hoa hoàn toàn
   const uppercaseKeywords = [
@@ -670,7 +681,7 @@ function preprocessDescription(desc) {
   // Dùng lookbehind/lookahead để tránh cắt ngang từ, tránh bắt bên trong ** đã format
   const uppercasePattern =
     "(?<![" + viChars + "0-9*])(?:" + normalizedKeywords.join("|") + ")(?![" + viChars + "])\\s*:?[ \\t]*";
-    
+
   const generalPattern =
     "(?<![" + viChars + "0-9*])(?:" + generalKeywords.join("|") + ")(?![" + viChars + "])\\s*:[ \\t]*";
 
@@ -701,26 +712,13 @@ function preprocessDescription(desc) {
     return (offset === 0 && !formatted.includes("\n")) ? "- " + formattedMatch : "\n- " + formattedMatch;
   });
 
-  // 3. Đảm bảo toàn bộ chuỗi được gạch đầu dòng đồng bộ nếu chưa có
-  if (!formatted.trim().startsWith("-") && !formatted.trim().startsWith("*")) {
-    formatted = "- " + formatted.trim();
-  }
-
-  // Dọn dẹp khoảng trắng thừa và sửa lỗi trùng lặp dấu gạch đầu dòng (ví dụ: - - **TÊN SẢN PHẨM**)
+  // 3. Đảm bảo dọn dẹp khoảng trắng thừa và dấu gạch đầu dòng dư thừa
   formatted = formatted
     .split("\n")
     .map((line) => {
       let cleanLine = line.trim();
-      // Xóa dấu gạch đầu dòng lặp lại dư thừa
+      // Xóa dấu gạch đầu dòng lặp lại dư thừa (vd: - - **Key**)
       cleanLine = cleanLine.replace(/^[-*]\s+[-*]\s+/, "- ");
-      // Nếu dòng không rỗng và không có dấu gạch đầu dòng, tự động thêm
-      if (
-        cleanLine.length > 0 &&
-        !cleanLine.startsWith("-") &&
-        !cleanLine.startsWith("*")
-      ) {
-        cleanLine = "- " + cleanLine;
-      }
       return cleanLine;
     })
     .filter((line) => {
@@ -759,7 +757,7 @@ window.openProductModal = function (productId) {
 
   // Hiển thị nội dung mô tả sản phẩm (đã được tự động tách dòng và in đậm)
   let markdownText = preprocessDescription(prod.description || "");
-  
+
   // Fallback: Nếu không có description nhưng có specs thì mới lấy specs ra hiển thị
   if (!markdownText && prod.specs && Object.keys(prod.specs).length > 0) {
     for (const [key, value] of Object.entries(prod.specs)) {
@@ -792,7 +790,7 @@ function renderMarkdownSafe(text) {
     breaks: true,
     gfm: true
   });
-  
+
   const rawHTML = marked.parse(String(text || ""));
   return sanitizeHTML(rawHTML);
 }
