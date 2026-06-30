@@ -738,7 +738,8 @@ def determine_action_heuristically(query: str, filters: dict) -> tuple[str, bool
         "co nhung", "liet ke", "danh sach", "ke ten", "tim cac",
         "de xuat", "goi y", "gioi thieu", "cho toi xem", "co gi",
         "nhung san pham", "nhung thiet bi", "nhung loai",
-        "san pham nao", "thiet bi nao", "loai nao", "tim giup"
+        "san pham nao", "thiet bi nao", "loai nao", "tim giup",
+        "cai nao", "dat nhat", "re nhat"
     ]
     is_list_query = any(p in q_norm for p in list_patterns)
     
@@ -903,7 +904,7 @@ def condense_question(query: str, history: list[ChatMessage]) -> str:
         "Quy tắc tối quan trọng:\n"
         "1. Nếu câu hỏi mới là một câu đính chính, mở rộng hoặc thu hẹp phạm vi của câu hỏi ngay trước đó (ví dụ: 'ý tôi là tất cả sản phẩm', 'tìm món rẻ nhất', 'loại màu đỏ'), BẮT BUỘC phải mang yêu cầu chính (intent) của câu hỏi trước đó ghép với phạm vi mới này.\n"
         "2. Nếu câu hỏi mới HỎI TIẾP về sản phẩm/hãng ở câu trước (dùng đại từ 'nó', 'loại này', 'giá bao nhiêu', ...), hãy thay thế đại từ bằng tên sản phẩm/hãng đó.\n"
-        "3. Nếu câu hỏi mới ĐỔI CHỦ ĐỀ sang một loại thiết bị/hãng khác hoàn toàn, TUYỆT ĐỐI KHÔNG mang tên sản phẩm/hãng cũ vào câu hỏi mới.\n"
+        "3. Nếu câu hỏi mới ĐỔI CHỦ ĐỀ hoặc hỏi MỚI HOÀN TOÀN (ví dụ: 'có bán máy hút bụi không', 'công ty ở đâu'), CHỈ giữ lại nội dung của câu hỏi mới, TUYỆT ĐỐI KHÔNG mang bất kỳ yêu cầu cũ nào (như đắt nhất, rẻ nhất, thông số) từ câu trước sang.\n"
         "4. Nếu câu hỏi mới đã đầy đủ ngữ nghĩa, giữ nguyên.\n"
         "5. CHỈ trả về đúng MỘT CÂU được viết lại, không giải thích, không thêm ngoặc kép.\n\n"
         f"--- Lịch sử ---\n{history_text}\n"
@@ -1367,15 +1368,23 @@ async def chat_endpoint(request: ChatRequest):
             else:
                 context_brands += "Không tìm thấy hãng cụ thể nào trong dữ liệu cung cấp loại này.\n"
                 
+            # Lấy danh sách TẤT CẢ danh mục có thực trong DB để LLM gợi ý (không tự bịa)
+            all_categories = sorted(list(set(prod.get("category", "") for prod in metadata if prod.get("category"))))
+            if not type_filter or type_filter == "all" or is_generic_type(type_filter):
+                context_brands += "\nDanh sách các LOẠI THIẾT BỊ HIỆN CÓ trong hệ thống để bạn gợi ý cho khách:\n"
+                for cat in all_categories:
+                    context_brands += f"  - {cat}\n"
+                
             system_prompt = (
                 "Bạn là một trợ lý ảo tư vấn thiết bị công nghiệp thông minh của Đại Dương Automation.\n"
                 "Khách hàng đang yêu cầu tư vấn chung chung về một loại thiết bị nhưng chưa chỉ rõ hãng sản xuất hoặc model cụ thể.\n"
                 "Nhiệm vụ của bạn:\n"
                 "1. Hãy trả lời lịch sự, giới thiệu các hãng chúng tôi đang cung cấp dựa trên dữ liệu bên dưới.\n"
                 "2. Hỏi ngược lại khéo léo để khách chọn hãng sản xuất hoặc chia sẻ thêm nhu cầu cụ thể.\n"
-                "3. Nếu có nhiều hãng, hãy giới thiệu sơ lược ưu điểm của 2-3 hãng tiêu biểu.\n"
-                "4. Định dạng câu trả lời đẹp bằng markdown, viết bằng tiếng Việt.\n\n"
-                f"--- Dữ liệu các hãng hiện có ---\n{context_brands}"
+                "3. Nếu không rõ loại thiết bị, hãy GỢI Ý các loại thiết bị dựa vào 'LOẠI THIẾT BỊ HIỆN CÓ' bên dưới. TUYỆT ĐỐI KHÔNG tự bịa ra (như Robot công nghiệp v.v.) nếu nó không có trong danh sách.\n"
+                "4. Nếu có nhiều hãng, hãy giới thiệu sơ lược ưu điểm của 2-3 hãng tiêu biểu.\n"
+                "5. Định dạng câu trả lời đẹp bằng markdown, viết bằng tiếng Việt.\n\n"
+                f"--- Dữ liệu hiện có ---\n{context_brands}"
             )
             
             if not key_manager.api_keys:
