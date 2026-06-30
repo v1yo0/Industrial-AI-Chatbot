@@ -757,18 +757,14 @@ window.openProductModal = function (productId) {
     modalProductImg.style.display = "none";
   }
 
-  // Ưu tiên hiển thị bảng specs nếu Backend đã bóc tách sẵn
-  let markdownText = "";
-  if (prod.specs && Object.keys(prod.specs).length > 0) {
-    markdownText += "### Thông số kỹ thuật\n\n";
+  // Hiển thị nội dung mô tả sản phẩm (đã được tự động tách dòng và in đậm)
+  let markdownText = preprocessDescription(prod.description || "");
+  
+  // Fallback: Nếu không có description nhưng có specs thì mới lấy specs ra hiển thị
+  if (!markdownText && prod.specs && Object.keys(prod.specs).length > 0) {
     for (const [key, value] of Object.entries(prod.specs)) {
       markdownText += `- **${key.trim()}**: ${value}\n`;
     }
-    if (prod.description && prod.description.trim()) {
-        markdownText += "\n### Mô tả thêm\n\n" + preprocessDescription(prod.description);
-    }
-  } else {
-    markdownText = preprocessDescription(prod.description || "");
   }
 
   modalProductDesc.innerHTML = renderMarkdownSafe(markdownText);

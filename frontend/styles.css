@@ -825,17 +825,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding-right: 480px;
     z-index: 10000;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-}
-
-@media (max-width: 1100px) {
-    .modal-overlay {
-        padding-right: 0;
-    }
 }
 
 .modal-overlay.active {
