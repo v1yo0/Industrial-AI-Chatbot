@@ -1,6 +1,6 @@
 # Industrial AI Chatbot (RAG)
 
-Chatbot tư vấn thiết bị công nghiệp cho dữ liệu sản phẩm trong `data.xlsx`. Hệ thống dùng FastAPI, SentenceTransformers và vector search bằng NumPy để truy xuất sản phẩm liên quan, sau đó dùng Gemini API để tổng hợp câu trả lời tiếng Việt.
+Chatbot tư vấn thiết bị công nghiệp cho dữ liệu sản phẩm trong `data.xlsx`. Hệ thống dùng FastAPI, SentenceTransformers và vector database **Qdrant (chạy qua Docker)** để truy xuất sản phẩm liên quan, sau đó dùng Gemini API để tổng hợp câu trả lời tiếng Việt.
 
 ## Tính năng
 
@@ -46,10 +46,20 @@ Có thể dùng nhiều key:
 GEMINI_API_KEYS=KEY_1,KEY_2,KEY_3
 ```
 
-### 3. Tạo vector store
+### 3. Cài đặt và khởi chạy Qdrant (Vector Database)
+
+Hệ thống sử dụng Qdrant lưu trữ dưới dạng Docker container.
+
+```bash
+docker run -d -p 6333:6333 -p 6334:6334 -v qdrant_storage:/qdrant/storage:z qdrant/qdrant
+```
+
+*Qdrant Web UI (Dashboard) sẽ được host ở `http://localhost:6333/dashboard`.*
+
+### 4. Tạo vector store
 Download dataset : "https://drive.google.com/drive/folders/1iiTd0LejstHElslXODa-8Y0S0oMBul7M?usp=sharing"
 
-Script sẽ đọc `data.xlsx` ở thư mục gốc project và ghi dữ liệu vào `backend/vector_store/`.
+Script sẽ đọc `data.xlsx` ở thư mục gốc project và ghi dữ liệu vector lên database Qdrant.
 
 ```bash
 python backend/ingest.py
@@ -57,7 +67,7 @@ python backend/ingest.py
 
 Lần đầu chạy có thể mất vài phút vì cần tải model embedding `intfloat/multilingual-e5-small`.
 
-### 4. Chạy backend
+### 5. Chạy backend
 
 ```bash
 python backend/app.py
@@ -65,7 +75,7 @@ python backend/app.py
 
 Backend mặc định chạy tại `http://127.0.0.1:8000`.
 
-### 5. Chạy frontend
+### 6. Chạy frontend
 
 Khuyến nghị chạy static server:
 
@@ -77,8 +87,8 @@ Mở trình duyệt tại `http://localhost:3000`.
 
 ## Cấu trúc
 
-- `backend/app.py`: FastAPI app, retrieval, query parsing và Gemini client.
-- `backend/ingest.py`: đọc Excel, tạo embeddings và metadata.
+- `backend/app.py`: FastAPI app, retrieval (Qdrant), query parsing và Gemini client.
+- `backend/ingest.py`: đọc Excel, tạo embeddings và đẩy lên Qdrant.
 - `backend/.env.example`: mẫu cấu hình môi trường.
 - `frontend/index.html`: giao diện chat.
 - `frontend/styles.css`: style giao diện.
