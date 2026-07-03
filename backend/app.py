@@ -355,6 +355,39 @@ CHUNK_MAP_PATH = os.path.join(BACKEND_DIR, "vector_store", "chunk_map.json")
 
 embeddings = None
 metadata = None
+SYNONYM_MAP = {
+    ("động cơ", "motor", "dong co"): ["động cơ", "motor", "servo motor", "geared motor", "stepping motor"],
+    ("can nhiệt", "cặp nhiệt", "can nhiet", "cap nhiet", "thermocouple"): ["can nhiệt", "cặp nhiệt", "thermo", "e52"],
+    ("bộ điều khiển nhiệt độ", "bo dieu khien nhiet do", "đồng hồ nhiệt độ", "dong ho nhiet do", "temperature controller"): 
+        ["bộ điều khiển nhiệt độ", "bộ điều khiển trương trình bước nhiệt", "đồng hồ nhiệt độ", "bộ ghi dữ liệu nhiệt độ"],
+    ("bộ điều khiển", "bo dieu khien", "controller"): ["bộ điều khiển", "controller", "driver điều khiển"],
+    ("cảm biến nhiệt", "cam bien nhiet"): ["cảm biến nhiệt", "can nhiệt", "cặp nhiệt", "đầu dò nhiệt"],
+    ("cảm biến tiệm cận", "cam bien tiem can", "tiệm cận", "tiem can", "proximity"): ["cảm biến tiệm cận", "cảm biến cảm ứng"],
+    ("cảm biến quang", "cam bien quang", "photoelectric"): ["cảm biến quang", "cảm biến quang điện"],
+    ("cảm biến áp suất", "cam bien ap suat", "pressure"): ["cảm biến áp suất"],
+    ("cảm biến", "cam bien", "sensor"): ["cảm biến", "sensor"],
+    ("máy sấy", "may say", "dryer"): ["máy sấy"],
+    ("máy tuốt", "may tuot"): ["máy tuốt", "mira", "cosmic"],
+    ("máy hút bụi", "may hut bui", "vacuum"): ["máy hút bụi"],
+    ("kích", "thủy lực", "kich thuy luc", "hydraulic", "jack", "con rùa", "con thua"): ["kích", "kích thủy lực", "thủy lực", "con rùa", "hydraulic", "hydraulic jack"],
+    ("máy ghi", "may ghi", "recorder"): ["máy ghi", "bộ ghi"],
+    ("van", "valve", "van điện từ"): ["van", "van điện từ"],
+    ("xi lanh", "cylinder"): ["xi lanh", "xi lanh khí"],
+    ("khúc xạ kế", "khuc xa ke", "refractometer"): ["khúc xạ kế"],
+    ("kìm",): ["kìm"],
+    ("găng tay", "gang tay"): ["găng tay"],
+    ("quạt", "quat", "fan"): ["quạt"],
+    ("hộp số", "hop so", "gearbox"): ["hộp số", "gearbox", "geared"],
+    ("bơm", "bom", "pump"): ["bơm", "ống bơm"],
+    ("đầu nối", "dau noi", "connector", "terminal"): ["đầu nối"],
+    ("biến tần", "bien tan", "inverter"): ["biến tần", "inverter"],
+    ("plc",): ["plc", "bộ lập trình"],
+    ("relay", "rơ le", "ro le"): ["relay", "rơ le"],
+    ("nguồn", "nguon", "power supply"): ["nguồn", "nguồn cấp", "power supply"],
+    ("bộ chuyển đổi tín hiệu", "signal converter", "signal isolator"): ["bộ chuyển đổi tín hiệu", "signal converter"],
+    ("quần áo", "áo", "quần", "trang phục", "bảo hộ", "giày"): ["quần áo", "áo", "quần", "trang phục", "bảo hộ", "giày", "phòng sạch"],
+}
+ALL_PRODUCT_TYPES = []
 chunk_map = None
 product_to_chunks = None
 embedding_model = None
@@ -464,6 +497,14 @@ def init_backend():
         with open(METADATA_PATH, "rb") as f:
             metadata = pickle.load(f)
     print(f"Đã tải thành công {len(metadata)} sản phẩm.")
+    
+    # Tự động tạo danh sách tất cả các loại thiết bị (từ DB + từ điển đồng nghĩa)
+    global ALL_PRODUCT_TYPES
+    db_cats = set(prod.get("category", "") for prod in metadata if prod.get("category"))
+    synonym_keys = set()
+    for keys in SYNONYM_MAP.keys():
+        synonym_keys.update(keys)
+    ALL_PRODUCT_TYPES = sorted(list(db_cats.union(synonym_keys)), key=len, reverse=True)
     
     print("Đang xây dựng Inverted Indexes...")
     for idx, prod in enumerate(metadata):
@@ -588,41 +629,8 @@ def get_synonyms_for_type(type_query: str) -> list[str]:
         return []
     t = type_query.strip().lower()
     
-    synonym_map = {
-        ("động cơ", "motor", "dong co"): ["động cơ", "motor", "servo motor", "geared motor", "stepping motor"],
-        ("can nhiệt", "cặp nhiệt", "can nhiet", "cap nhiet", "thermocouple"): ["can nhiệt", "cặp nhiệt", "thermo", "e52"],
-        ("bộ điều khiển nhiệt độ", "bo dieu khien nhiet do", "đồng hồ nhiệt độ", "dong ho nhiet do", "temperature controller"): 
-            ["bộ điều khiển nhiệt độ", "bộ điều khiển trương trình bước nhiệt", "đồng hồ nhiệt độ", "bộ ghi dữ liệu nhiệt độ"],
-        ("bộ điều khiển", "bo dieu khien", "controller"): ["bộ điều khiển", "controller", "driver điều khiển"],
-        ("cảm biến nhiệt", "cam bien nhiet"): ["cảm biến nhiệt", "can nhiệt", "cặp nhiệt", "đầu dò nhiệt"],
-        ("cảm biến tiệm cận", "cam bien tiem can", "tiệm cận", "tiem can", "proximity"): ["cảm biến tiệm cận", "cảm biến cảm ứng"],
-        ("cảm biến quang", "cam bien quang", "photoelectric"): ["cảm biến quang", "cảm biến quang điện"],
-        ("cảm biến áp suất", "cam bien ap suat", "pressure"): ["cảm biến áp suất"],
-        ("cảm biến", "cam bien", "sensor"): ["cảm biến", "sensor"],
-        ("máy sấy", "may say", "dryer"): ["máy sấy"],
-        ("máy tuốt", "may tuot"): ["máy tuốt", "mira", "cosmic"],
-        ("máy hút bụi", "may hut bui", "vacuum"): ["máy hút bụi"],
-        ("kích", "thủy lực", "kich thuy luc", "hydraulic", "jack", "con rùa", "con thua"): ["kích", "kích thủy lực", "thủy lực", "con rùa", "hydraulic", "hydraulic jack"],
-        ("máy ghi", "may ghi", "recorder"): ["máy ghi", "bộ ghi"],
-        ("van", "valve", "van điện từ"): ["van", "van điện từ"],
-        ("xi lanh", "cylinder"): ["xi lanh", "xi lanh khí"],
-        ("khúc xạ kế", "khuc xa ke", "refractometer"): ["khúc xạ kế"],
-        ("kìm",): ["kìm"],
-        ("găng tay", "gang tay"): ["găng tay"],
-        ("quạt", "quat", "fan"): ["quạt"],
-        ("hộp số", "hop so", "gearbox"): ["hộp số", "gearbox", "geared"],
-        ("bơm", "bom", "pump"): ["bơm", "ống bơm"],
-        ("đầu nối", "dau noi", "connector", "terminal"): ["đầu nối"],
-        ("biến tần", "bien tan", "inverter"): ["biến tần", "inverter"],
-        ("plc",): ["plc", "bộ lập trình"],
-        ("relay", "rơ le", "ro le"): ["relay", "rơ le"],
-        ("nguồn", "nguon", "power supply"): ["nguồn", "nguồn cấp", "power supply"],
-        ("bộ chuyển đổi tín hiệu", "signal converter", "signal isolator"): ["bộ chuyển đổi tín hiệu", "signal converter"],
-        ("quần áo", "áo", "quần", "trang phục", "bảo hộ", "giày"): ["quần áo", "áo", "quần", "trang phục", "bảo hộ", "giày", "phòng sạch"],
-    }
-    
     t_norm = remove_vietnamese_accents(t)
-    for keys, synonyms in synonym_map.items():
+    for keys, synonyms in SYNONYM_MAP.items():
         for key in keys:
             key_norm = remove_vietnamese_accents(key)
             if key in t or key_norm in t_norm:
@@ -683,20 +691,7 @@ def extract_metadata_from_text(text: str) -> dict:
             break
             
     product_type = None
-    type_keywords = [
-        "bộ chuyển đổi tín hiệu", "signal converter",
-        "bộ điều khiển nhiệt độ", "temperature controller", "đồng hồ nhiệt độ",
-        "bộ điều khiển", "controller",
-        "động cơ", "motor", "can nhiệt", "cặp nhiệt", "cảm biến", "sensor",
-        "máy sấy", "dryer", "máy tuốt", "máy hút bụi",
-        "van", "valve", "xi lanh", "cylinder", "khúc xạ kế", "kìm", "găng tay",
-        "quạt", "fan", "hộp số", "gearbox", "bơm", "pump", "đầu nối", "connector",
-        "biến tần", "inverter", "plc", "relay", "rơ le", "nguồn", "power supply",
-        "kích", "kích thủy lực", "thủy lực", "con rùa", "hydraulic", "hydraulic jack",
-        "quần áo", "áo", "quần", "trang phục", "bảo hộ", "giày"
-    ]
-    sorted_types = sorted(type_keywords, key=len, reverse=True)
-    for t_kw in sorted_types:
+    for t_kw in ALL_PRODUCT_TYPES:
         t_kw_norm = remove_vietnamese_accents(t_kw)
         if f" {t_kw_norm} " in f" {text_norm} " or f" {t_kw} " in f" {text_lower} ":
             product_type = t_kw
@@ -741,11 +736,11 @@ def determine_action_heuristically(query: str, filters: dict) -> tuple[str, bool
         "de xuat", "goi y", "gioi thieu", "cho toi xem", "co gi",
         "nhung san pham", "nhung thiet bi", "nhung loai",
         "san pham nao", "thiet bi nao", "loai nao", "tim giup",
-        "cai nao", "dat nhat", "re nhat"
+        "cai nao", "dat nhat", "re nhat", "co ban", "tim mua", "o dau ban", "ben ban co"
     ]
     is_list_query = any(p in q_norm for p in list_patterns)
     
-    advice_patterns = ["tu van", "muon mua", "can mua", "nen mua", "chon", "lua chon", "tim mua"]
+    advice_patterns = ["tu van", "muon mua", "can mua", "nen mua", "chon", "lua chon", "tim mua", "nen dung", "loi khuyen"]
     is_advice_query = any(p in q_norm for p in advice_patterns)
     
     has_company = bool(filters.get("company"))
@@ -1107,11 +1102,9 @@ def hybrid_search(
         
     if type_keywords:
         t_candidates = set()
-        for kw in type_keywords:
-            kw_norm = remove_vietnamese_accents(kw)
-            for k, v in category_index.items():
-                if kw in k or kw_norm in k:
-                    t_candidates.update(v)
+        for idx, prod in enumerate(metadata):
+            if product_matches_type_filter(prod, type_keywords):
+                t_candidates.add(idx)
         candidate_set = t_candidates if candidate_set is None else candidate_set.intersection(t_candidates)
         
     if model_tokens:
