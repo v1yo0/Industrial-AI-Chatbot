@@ -547,7 +547,9 @@ function preprocessDescription(text) {
   const transitionPhrases = [
     "Trên đây là", "Ứng dụng của", "Ứng dụng máy", "Đặc điểm của", "Một số lưu ý",
     "Quý đối tác", "Bạn có thể tham khảo", "Ngoài ra,", "Điểm mạnh của",
-    "Với các tính năng", "Cụ thể,", "Nếu bạn đang tìm kiếm", "Đại Dương Automation"
+    "Với các tính năng", "Cụ thể,", "Nếu bạn đang tìm kiếm", "Đại Dương Automation",
+    "Nếu bạn", "Sản phẩm này", "Thiết bị này", "Máy hút bụi này", "Máy hút bụi công nghiệp",
+    "Được sử dụng", "Phù hợp cho", "Được ứng dụng", "Được thiết kế", "Nhờ thiết kế", "Với thiết kế", "Do đó", "Vì vậy"
   ];
   const transitionRegex = new RegExp(`(?<!\\n)(?<!\\.)\\s*(${transitionPhrases.join("|")})`, "g");
   formatted = formatted.replace(transitionRegex, ".\n\n$1");
