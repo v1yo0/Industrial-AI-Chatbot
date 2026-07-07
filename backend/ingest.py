@@ -14,8 +14,9 @@ if sys.platform == "win32":
         pass
 import pandas as pd
 import numpy as np
-import pickle
 from sentence_transformers import SentenceTransformer
+import qdrant_client
+from qdrant_client.models import VectorParams, Distance, PointStruct
 
 
 # ============================================================
@@ -422,23 +423,45 @@ def ingest_data():
     norms = np.where(norms == 0, 1e-9, norms)
     normalized_embeddings = embeddings / norms
     
-    # 7. Lưu trữ kết quả
+    # 7. Lưu trữ kết quả (Qdrant & Metadata)
     vector_store_dir = backend_dir / "vector_store"
     vector_store_dir.mkdir(exist_ok=True)
     
-    embeddings_path = vector_store_dir / "embeddings.npy"
-    metadata_path = vector_store_dir / "metadata.pkl"
     metadata_json_path = vector_store_dir / "metadata.json"
     chunk_map_path = vector_store_dir / "chunk_map.json"
     
-    print(f"\nĐang lưu Embeddings vector vào {embeddings_path}...")
-    np.save(embeddings_path, normalized_embeddings)
-    
-    print(f"Đang lưu metadata vào {metadata_path}...")
-    with open(metadata_path, "wb") as f:
-        pickle.dump(metadata_list, f)
+    print("\nĐang khởi tạo kết nối Qdrant Docker (localhost:6333)...")
+    try:
+        client = qdrant_client.QdrantClient(url="http://localhost:6333")
+        
+        print("Đang tạo collection 'products' trên Qdrant...")
+        client.recreate_collection(
+            collection_name="products",
+            vectors_config=VectorParams(size=normalized_embeddings.shape[1], distance=Distance.COSINE)
+        )
+        
+        print("Đang đẩy dữ liệu lên Qdrant...")
+        points = []
+        for i, (chunk_vector, chunk_info) in enumerate(zip(normalized_embeddings, chunk_map)):
+            points.append(PointStruct(
+                id=i,
+                vector=chunk_vector.tolist(),
+                payload=chunk_info
+            ))
+            # Push theo batch 1000 items
+            if len(points) >= 1000:
+                client.upload_points(collection_name="products", points=points)
+                points = []
+                print(f"  Đã đẩy {i+1} chunks...")
+        if points:
+            client.upload_points(collection_name="products", points=points)
+            print(f"  Đã đẩy xong tất cả {len(all_chunks)} chunks.")
+    except Exception as e:
+        print(f"\nLỖI: Không thể kết nối hoặc đẩy dữ liệu lên Qdrant Docker. Lỗi: {e}")
+        print("Vui lòng đảm bảo Qdrant Docker đang chạy (port 6333)!")
+        return
 
-    print(f"Đang lưu metadata JSON vào {metadata_json_path}...")
+    print(f"\nĐang lưu metadata JSON vào {metadata_json_path}...")
     with open(metadata_json_path, "w", encoding="utf-8") as f:
         json.dump(metadata_list, f, ensure_ascii=False)
     

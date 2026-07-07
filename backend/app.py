@@ -3,7 +3,6 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["API_TRANSPORT"] = "rest"
 import sys
-import pickle
 import re
 import json
 import unicodedata
@@ -32,6 +31,8 @@ from dotenv import load_dotenv
 import google
 import google.generativeai as genai
 import google.api_core.exceptions
+import qdrant_client
+from qdrant_client.models import Filter, FieldCondition, MatchAny
 
 # Nạp cấu hình từ file .env
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -307,13 +308,17 @@ def build_evidence_xml(prod: dict, query: str, mode: str = "detail") -> str:
             xml_parts.extend(other_spec_lines[:max_other])
             xml_parts.append(f"  </other_specs>")
     
-    # Description (chỉ cho detail/list, và chỉ nếu specs ít)
+    # Description (chỉ cho detail/list/compare, và chỉ nếu specs ít)
     if mode == "detail" and len(specs) < 3:
         desc = build_relevant_description(prod.get('description', ''), query, max_chars=1600)
         if desc:
             xml_parts.append(f"  <description>{xml_text(desc)}</description>")
     elif mode == "list":
         desc = build_relevant_description(prod.get('description', ''), query, max_chars=500)
+        if desc and len(specs) < 3:
+            xml_parts.append(f"  <description>{xml_text(desc)}</description>")
+    elif mode == "compare":
+        desc = build_relevant_description(prod.get('description', ''), query, max_chars=800)
         if desc and len(specs) < 3:
             xml_parts.append(f"  <description>{xml_text(desc)}</description>")
     
@@ -348,12 +353,10 @@ app.add_middleware(
 # ============================================================
 
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
-EMBEDDINGS_PATH = os.path.join(BACKEND_DIR, "vector_store", "embeddings.npy")
 METADATA_JSON_PATH = os.path.join(BACKEND_DIR, "vector_store", "metadata.json")
-METADATA_PATH = os.path.join(BACKEND_DIR, "vector_store", "metadata.pkl")
 CHUNK_MAP_PATH = os.path.join(BACKEND_DIR, "vector_store", "chunk_map.json")
 
-embeddings = None
+qdrant_client_instance = None
 metadata = None
 SYNONYM_MAP = {
     ("động cơ", "motor", "dong co"): ["động cơ", "motor", "servo motor", "geared motor", "stepping motor"],
@@ -478,24 +481,25 @@ else:
 # ============================================================
 
 def init_backend():
-    global embeddings, metadata, chunk_map, product_to_chunks, embedding_model, reranker_model, bm25_index, bm25_corpus_tokens
+    global qdrant_client_instance, metadata, chunk_map, product_to_chunks, embedding_model, reranker_model, bm25_index, bm25_corpus_tokens
     global brand_index, category_index, series_index, sku_index
     
     print("--- ĐANG KHỞI ĐỘNG BACKEND ---")
     
-    if not os.path.exists(EMBEDDINGS_PATH) or not (os.path.exists(METADATA_JSON_PATH) or os.path.exists(METADATA_PATH)):
-        print("Cảnh báo: Chưa tìm thấy Vector DB. Vui lòng chạy ingest.py trước.")
+    if not os.path.exists(METADATA_JSON_PATH):
+        print("Cảnh báo: Chưa tìm thấy Metadata. Vui lòng chạy ingest.py trước.")
         return
         
-    print("Đang tải Vector Embeddings và Metadata...")
-    embeddings = np.load(EMBEDDINGS_PATH)
-    if os.path.exists(METADATA_JSON_PATH):
-        with open(METADATA_JSON_PATH, "r", encoding="utf-8") as f:
-            metadata = json.load(f)
-    else:
-        print("Cảnh báo: Đang đọc metadata.pkl. Chỉ dùng file pickle từ nguồn tin cậy.")
-        with open(METADATA_PATH, "rb") as f:
-            metadata = pickle.load(f)
+    print("Đang khởi tạo kết nối Qdrant và tải Metadata...")
+    try:
+        qdrant_client_instance = qdrant_client.QdrantClient(url="http://localhost:6333")
+        # Kiểm tra kết nối
+        qdrant_client_instance.get_collections()
+    except Exception as e:
+        print(f"Cảnh báo: Không thể kết nối Qdrant Docker. Lỗi: {e}")
+        
+    with open(METADATA_JSON_PATH, "r", encoding="utf-8") as f:
+        metadata = json.load(f)
     print(f"Đã tải thành công {len(metadata)} sản phẩm.")
     
     # Tự động tạo danh sách tất cả các loại thiết bị (từ DB + từ điển đồng nghĩa)
@@ -1158,31 +1162,40 @@ def hybrid_search(
     
     print(f"[Search] Candidates sau pre-filter: {len(candidate_indices)} (series_query={has_series_query})")
     
-    # --- Bước 2: Vector Search trên chunks của candidates ---
-    if product_to_chunks is not None:
-        # Multi-chunk mode: search trên chunks, deduplicate theo product
-        chunk_scores = []
-        for prod_idx in candidate_indices:
-            for chunk_idx in product_to_chunks.get(prod_idx, []):
-                if chunk_idx < len(embeddings):
-                    sim = float(np.dot(embeddings[chunk_idx], query_vector))
-                    chunk_scores.append((prod_idx, sim))
+    # --- Bước 2: Vector Search bằng Qdrant ---
+    global qdrant_client_instance
+    
+    qdrant_filter = None
+    if candidate_indices and len(candidate_indices) < len(metadata):
+        qdrant_filter = Filter(
+            must=[
+                FieldCondition(
+                    key="product_idx",
+                    match=MatchAny(any=candidate_indices)
+                )
+            ]
+        )
         
-        # Deduplicate: lấy max score cho mỗi product
+    try:
+        search_result = qdrant_client_instance.query_points(
+            collection_name="products",
+            query=query_vector.tolist(),
+            query_filter=qdrant_filter,
+            limit=top_k * 6  # Lấy dư để deduplicate
+        ).points
+        
+        # Deduplicate (Qdrant trả về multiple chunks của cùng 1 product)
         product_max_scores = {}
-        for prod_idx, score in chunk_scores:
-            if prod_idx not in product_max_scores or score > product_max_scores[prod_idx]:
-                product_max_scores[prod_idx] = score
-        
+        for hit in search_result:
+            prod_idx = hit.payload.get("product_idx")
+            if prod_idx is not None:
+                if prod_idx not in product_max_scores or hit.score > product_max_scores[prod_idx]:
+                    product_max_scores[prod_idx] = hit.score
+                    
         vector_ranked = sorted(product_max_scores.items(), key=lambda x: x[1], reverse=True)[:top_k * 3]
-    else:
-        # Fallback: 1 embedding = 1 sản phẩm (tương thích ngược khi chưa có chunk_map)
-        vector_scores = []
-        for idx in candidate_indices:
-            if idx < len(embeddings):
-                sim = float(np.dot(embeddings[idx], query_vector))
-                vector_scores.append((idx, sim))
-        vector_ranked = sorted(vector_scores, key=lambda x: x[1], reverse=True)[:top_k * 3]
+    except Exception as e:
+        print(f"[Search Error] Lỗi khi gọi Qdrant: {e}")
+        vector_ranked = []
     
     # --- Bước 3: BM25 Search trên candidates ---
     query_tokens = tokenize_vietnamese(query)
@@ -1287,12 +1300,12 @@ NGUYÊN TẮC QUAN TRỌNG NHẤT: TUYỆT ĐỐI KHÔNG BỊA ĐẶT THÔNG S�
 
 @app.post("/api/chat")
 async def chat_endpoint(request: ChatRequest):
-    global embeddings, metadata, embedding_model, query_embedding_cache, search_result_cache
+    global qdrant_client_instance, metadata, embedding_model, query_embedding_cache, search_result_cache
     
-    if embeddings is None or metadata is None or embedding_model is None:
+    if qdrant_client_instance is None or metadata is None or embedding_model is None:
         init_backend()
-        if embeddings is None:
-            raise HTTPException(status_code=500, detail="Vector DB not initialized. Please run ingest.py first.")
+        if qdrant_client_instance is None:
+            raise HTTPException(status_code=500, detail="Qdrant DB not initialized. Please ensure Docker is running and run ingest.py first.")
             
     query = request.message.strip()
     if not query:
