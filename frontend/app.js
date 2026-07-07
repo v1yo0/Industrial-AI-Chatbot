@@ -222,7 +222,10 @@ async function handleUserMessageSend() {
             } else if (data.type === 'chunk') {
               fullResponse += data.content;
               updateBotMessageStreaming(botMessageId, fullResponse);
-              // Cập nhật giao diện (không dùng setTimeout để tránh bị throttle khi chuyển tab)
+              // Cập nhật giao diện (nhường luồng cho trình duyệt vẽ để tránh bị gom cục, trừ khi tab đang ẩn)
+              if (!document.hidden) {
+                await new Promise(resolve => setTimeout(resolve, 10));
+              }
             } else if (data.type === 'error') {
               fullResponse += "\n\n⚠️ " + data.content;
               updateBotMessageStreaming(botMessageId, fullResponse);
@@ -551,7 +554,7 @@ function preprocessDescription(text) {
     "Nếu bạn", "Sản phẩm này", "Thiết bị này", "Máy hút bụi này", "Máy hút bụi công nghiệp",
     "Được sử dụng", "Phù hợp cho", "Được ứng dụng", "Được thiết kế", "Nhờ thiết kế", "Với thiết kế", "Do đó", "Vì vậy"
   ];
-  const transitionRegex = new RegExp(`(?<!\\n)(?<!\\.)\\s*(${transitionPhrases.join("|")})`, "g");
+  const transitionRegex = new RegExp(`(?<=[^\\n\\.\\s])\\s*(${transitionPhrases.join("|")})`, "g");
   formatted = formatted.replace(transitionRegex, ".\n\n$1");
 
   // Tập hợp các từ khóa viết hoa toàn bộ (đặc trưng của mô tả kĩ thuật)
