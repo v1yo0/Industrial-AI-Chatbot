@@ -38,34 +38,6 @@ function setupEventListeners() {
     userInput.focus();
   });
 
-  // Hiệu ứng Vệt ma thuật (Mouse Trail)
-  let lastTrailTime = 0;
-  chatWidgetWindow.addEventListener("mousemove", (e) => {
-    const now = Date.now();
-    if (now - lastTrailTime < 60) return; // Giới hạn tốc độ sinh hiệu ứng
-    lastTrailTime = now;
-
-    const trail = document.createElement("div");
-    trail.className = "mouse-trail";
-
-    // Tọa độ chuột trong khung chat
-    const rect = chatWidgetWindow.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    trail.style.left = `${x}px`;
-    trail.style.top = `${y}px`;
-
-    // Icon ngẫu nhiên
-    const icons = ["💧", "✨", "🫧", "🍃", "🌿", "🌳", "🍁", "🪵", "🌊", "☁️", "⚡️", "🌾", "❄️", "🏝️", "⛈️", "🌧️", "🌥️"];
-    trail.textContent = icons[Math.floor(Math.random() * icons.length)];
-
-    chatWidgetWindow.appendChild(trail);
-
-    // Xóa đi sau khi kết thúc animation (1s)
-    setTimeout(() => trail.remove(), 1000);
-  });
-
   minimizeWidgetBtn.addEventListener("click", () => {
     chatWidgetWindow.classList.remove("active");
     chatWidgetFab.style.display = "flex";
@@ -97,14 +69,6 @@ function setupEventListeners() {
     }
   });
 
-  // Tái tạo vị trí rơi ngẫu nhiên cho mỗi icon sau khi nó rơi hết 1 vòng
-  document.querySelectorAll(".leaf").forEach(leaf => {
-    leaf.addEventListener("animationiteration", (e) => {
-      if (e.animationName === "fall") {
-        leaf.style.left = Math.random() * 95 + "%";
-      }
-    });
-  });
 }
 
 // Setup suggestions in default welcome chat bubble
