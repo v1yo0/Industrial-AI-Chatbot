@@ -103,5 +103,4 @@ Mở trình duyệt tại `http://localhost:3000`.
 
 ## Video Demo
 
-*(Thay thế `ID_VIDEO_CUA_BAN` bằng ID thực tế của video YouTube của bạn)*
-[![Video Demo](https://img.youtube.com/vi/ID_VIDEO_CUA_BAN/0.jpg)](https://www.youtube.com/watch?v=ID_VIDEO_CUA_BAN)
+[![Video Demo](https://youtu.be/U7RlbwO94Eg)
