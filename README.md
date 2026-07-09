@@ -97,10 +97,12 @@ Mở trình duyệt tại `http://localhost:3000`.
 
 ## Hình ảnh giao diện
 
-![Giao diện 1](image/README/1.png)
+![Giao diện 1](image/1.png)
 
-![Giao diện 2](image/README/2.png)
+![Giao diện 2](image/2.png)
 
 ## Video Demo
 
 ![Demo](demo.gif)
+
+*(Lưu ý: Để video có thể tự động phát ngay trong Markdown giống như file mẫu, bạn cần chuyển đổi file `demo.mp4` thành file `demo.gif` rồi đặt ở thư mục gốc nhé. Nếu dùng file mp4 thì bạn chỉ có thể để dạng link tải về như sau: [Tải Video Demo](demo.mp4))*
