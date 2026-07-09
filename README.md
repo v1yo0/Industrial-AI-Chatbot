@@ -97,9 +97,9 @@ Mở trình duyệt tại `http://localhost:3000`.
 
 ## Hình ảnh giao diện
 
-![Giao diện 1](image/1.png)
+![Giao diện 1](UI_Image/1.png)
 
-![Giao diện 2](image/2.png)
+![Giao diện 2](UI_Image/2.png)
 
 ## Video Demo
 
