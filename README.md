@@ -97,13 +97,12 @@ Mở trình duyệt tại `http://localhost:3000`.
 
 ## Hình ảnh giao diện
 
-![Giao diện 1](./Screenshot%202026-07-09%20230309.png)
+![Giao diện 1](screenshot-1.png)
 
-![Giao diện 2](./Screenshot%202026-07-09%20230349.png)
+![Giao diện 2](screenshot-2.png)
 
 ## Video Demo
 
-<video src="./demo.mp4" controls="controls" style="max-width: 100%;">
-  Trình duyệt của bạn không hỗ trợ thẻ video. Bạn có thể <a href="./demo.mp4">tải video tại đây</a>.
-</video>
+**[🎬 Xem Video Demo (demo.mp4)](demo.mp4)**
 
+*(Bạn có thể nhấp vào link trên để xem/tải video demo. Một số trình xem Markdown như của VS Code không hỗ trợ xem video trực tiếp bằng thẻ HTML.)*
