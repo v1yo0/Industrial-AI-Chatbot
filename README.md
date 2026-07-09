@@ -103,6 +103,6 @@ Mở trình duyệt tại `http://localhost:3000`.
 
 ## Video Demo
 
-![Demo](demo.gif)
+![Demo](demo.mp4)
 
 *(Lưu ý: Để video có thể tự động phát ngay trong Markdown giống như file mẫu, bạn cần chuyển đổi file `demo.mp4` thành file `demo.gif` rồi đặt ở thư mục gốc nhé. Nếu dùng file mp4 thì bạn chỉ có thể để dạng link tải về như sau: [Tải Video Demo](demo.mp4))*
