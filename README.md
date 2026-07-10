@@ -103,4 +103,4 @@ Mở trình duyệt tại `http://localhost:3000`.
 
 ## Video Demo
 
-[![Video Demo](https://youtu.be/U7RlbwO94Eg)
+[![Video Demo](https://img.youtube.com/vi/U7RlbwO94Eg/0.jpg)](https://www.youtube.com/watch?v=U7RlbwO94Eg)
